@@ -1,0 +1,16 @@
+===========================================================================================================================================
+
+                                                     INPUT FILE
+                                              
+All data must follow the input pattern: "value & variable & description", where '&' is the separation field delimiter. 
+                         Lines that do not follow this pattern are considered comments by default.
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+          7 & DAY   & An integer
+       3.14 & PI    & A double
+      Hello & LABEL & A string
+   1.0, 2.0 & VEC   & A vector of double
+        1.0 & VAR1  & Aleatory variable 1
+        2.0 & VAR2  & Aleatory variable 2
+        3.0 & VAR3  & Aleatory variable 3
