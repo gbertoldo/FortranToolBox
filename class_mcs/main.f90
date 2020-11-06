@@ -6,29 +6,17 @@ program main
 
    implicit none
 
-   ! Temp. variables
-   integer i
-
    ! Creating an instance of the mcs class
    type(class_mcs) :: spline
 
    ! Defining a set of data
-   integer, parameter :: N = 6
-   real(8) :: xa = 0.0d0
-   real(8) :: xb = 3.141592654d0
-   real(8) :: x(N)
-   real(8) :: y(N)
+   integer              :: opt = 2 ! 1=without fictitious points, 2=with fictitious points
+   integer              :: N   = 6
+   real(8), allocatable :: x(:)
+   real(8), allocatable :: y(:)
 
-
-   do i = 1, N
-
-      x(i) = (xb-xa) * dble(i-1)/dble(N-1) + xa
-
-      y(i) = cos(x(i))
-
-      write(11,*) x(i), y(i)
-
-   end do
+   ! Getting points for interpolation
+   call get_dataset(opt, N, x, y)
 
    ! Initializing the spline
    call spline%init(x, y)
@@ -37,6 +25,98 @@ program main
    call print_spline(10, 10000)
 
 contains
+
+   !> \brief Data set
+   subroutine get_dataset(opt, N, x, y)
+      implicit none
+      integer,              intent(in)    :: opt
+      integer,              intent(inout) :: N
+      real(8), allocatable, intent(out)   :: x(:)
+      real(8), allocatable, intent(out)   :: y(:)
+
+      ! Temp. variables
+      integer i
+
+      select case (opt)
+          case (1) ! Only boundary and internal points
+            call get_dataset1(N, x, y)
+          case (2) ! Includes fictitious points
+            N = N + 2
+            call get_dataset2(N, x, y)
+          case default
+
+      end select
+
+      do i = 1, N
+
+         write(11,*) x(i), y(i)
+
+      end do
+
+   end subroutine
+
+
+
+   !> \brief Data set 1
+   subroutine get_dataset1(N, x, y)
+      implicit none
+      integer,              intent(in)  :: N
+      real(8), allocatable, intent(out) :: x(:)
+      real(8), allocatable, intent(out) :: y(:)
+
+      ! Temp. variables
+      integer i
+      real(8) :: xa = 0.d0
+      real(8) :: xb = acos(-1.d0)
+
+      ! Allocating memory
+      allocate(x(N))
+      allocate(y(N))
+
+      do i = 1, N
+
+         x(i) = (xb-xa) * dble(i-1)/dble(N-1) + xa
+
+         y(i) = cos(x(i))
+
+      end do
+
+   end subroutine
+
+
+   !> \brief Data set 2
+   subroutine get_dataset2(N, x, y)
+      implicit none
+      integer,              intent(in)  :: N
+      real(8), allocatable, intent(out) :: x(:)
+      real(8), allocatable, intent(out) :: y(:)
+
+      ! Temp. variables
+      real(8) :: xb = acos(-1.d0)
+      real(8), allocatable :: x1(:)
+      real(8), allocatable :: y1(:)
+
+      ! Allocating memory
+      allocate(x(N))
+      allocate(y(N))
+      allocate(x1(N-2))
+      allocate(y1(N-2))
+
+      call get_dataset1(N-2,x1,y1)
+
+      x(2:N-1) = x1
+      y(2:N-1) = y1
+
+      x(1) = -0.05 * xb
+      x(N) =  1.05 * xb
+
+      y(1) =  1.d0
+      y(N) = -1.d0
+
+      deallocate( x1, y1)
+
+   end subroutine
+
 
    !> \brief Prints the spline
    subroutine print_spline(unt, np)

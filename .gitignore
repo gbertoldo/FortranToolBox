@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+/class_mcs/class_mcs.depend
+/class_mcs/bin/Debug/class_mcs
+/class_mcs/fort.10
+/class_mcs/fort.11
