@@ -1,0 +1,22 @@
+Power-law ogive parameters
+--------------------------
+         2.d0  &    lr   &   Ogive length (m)
+        0.5d0  &    rb   &   Ogive base length (m)
+      0.659d0  &     n   &   Exponent of the power-law
+
+
+Inlet boundary parameters
+-------------------------
+            1  &   kib   &   Kind of inlet boundary (0=ellipse, 1=power-law)
+        1.5d0  &    lb   &   Height of the outlet (m)
+        0.1d0  &    lf   &   Distance between the ogive tip and the front part of inlet domain (m)
+        0.5d0  &   nib   &   Exponent of the power-law inlet boundary
+
+Mesh parameters
+---------------
+            0  &    km   &   Kind of mesh ( 0 = structured, 1 = unstructured)
+          200  &    nx   &   Number of partitions along the axial direction
+           50  &    ny   &   Number of partitions along the radial direction
+        2.0d0  &   akn   &   Parameter to control the distribution of points along the inlet boundary
+        1.7d0  &   aks   &   Parameter to control the distribution of points along the ogive boundary
+
