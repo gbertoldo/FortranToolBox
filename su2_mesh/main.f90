@@ -2,7 +2,11 @@
 program main
     use mod_boundary
     use mod_class_ifile
+    use mod_class_path2d
+    use mod_points_distribution
     implicit none
+
+    character(len=100) :: version = "su2_mesh - 1.0.0. Last update 26/01/2021. Guilherme Bertoldo."
 
     ! Parameters to generate the mesh
     type params
@@ -15,12 +19,22 @@ program main
         real(8) :: n
         real(8) :: lb
         real(8) :: lf
-        real(8) :: akn
-        real(8) :: aks
         real(8) :: nib
+        integer :: ko
+        character(len=200) :: ogfile
+        integer :: kpog
+        real(8) :: faog
+        real(8) :: fbog
+        integer :: kpin
+        real(8) :: fain
+        real(8) :: fbin
     end type
 
     type(params) :: par
+
+    write(*,*)
+    write(*,*) version
+    write(*,*)
 
     call load_params()
 
@@ -47,9 +61,15 @@ contains
         call ifile%get_value(  par%n,   "n")
         call ifile%get_value( par%lb,  "lb")
         call ifile%get_value( par%lf,  "lf")
-        call ifile%get_value(par%akn, "akn")
-        call ifile%get_value(par%aks, "aks")
         call ifile%get_value(par%nib, "nib")
+        call ifile%get_value(par%ko, "ko")
+        call ifile%get_value(par%ogfile, "ogfile")
+        call ifile%get_value(par%kpog, "kpog")
+        call ifile%get_value(par%faog, "faog")
+        call ifile%get_value(par%fbog, "fbog")
+        call ifile%get_value(par%kpin, "kpin")
+        call ifile%get_value(par%fain, "fain")
+        call ifile%get_value(par%fbin, "fbin")
 
     end subroutine
 
@@ -242,21 +262,89 @@ contains
         type(boundary), intent(inout) :: bound
 
         integer :: i
-
+        integer :: iaux
+        integer :: IO
+        integer :: nlines
+        integer :: np
         real(8) :: lr
         real(8) :: rb
         real(8) :: n
+        real(8) :: aks
+        real(8) :: raux
+        real(8), allocatable :: xv(:)
+        real(8), allocatable :: yv(:)
 
-        lr = par%lr
-        rb = par%rb
-        n  = par%n
+        type(class_path2d) :: path
 
-        do i = 0, bound%sz
+        ! King of ogive (0=power-law, 1=load from file)
+        if ( par%ko == 0 ) then
 
-            bound%x(i) = (dble(i)/dble(bound%sz))**par%aks * lr
-            bound%y(i) = ( bound%x(i) / lr ) ** n * rb
+            lr = par%lr
+            rb = par%rb
+            n  = par%n
 
-        end do
+            aks = 2.d0 - 2.d0 * (n-0.5d0)
+
+            ! Number of partitions
+            np = 2000
+
+            allocate( xv(0:np) )
+            allocate( yv(0:np) )
+
+            do i = 0, np
+
+                xv(i) = (dble(i)/dble(np))**aks * lr
+                yv(i) = ( xv(i) / lr ) ** n * rb
+
+            end do
+
+            call path%init(xv, yv)
+
+            deallocate( xv )
+            deallocate( yv )
+
+        else ! Loads the ogive profile from file
+
+            nlines = 0
+            open(10, file=trim(par%ogfile))
+
+            ! Skipping header
+            read(10,*,IOStat=IO)
+            do
+                read(10,*,IOStat=IO) iaux, raux, raux
+                if ( IO /= 0 ) exit
+                nlines = nlines + 1
+            end do
+
+            if ( nlines < 3 ) then
+                write(*,*) "generate_ogive: inapropriated ogive profile."
+                stop
+            end if
+
+            allocate( xv(nlines) )
+            allocate( yv(nlines) )
+
+            rewind(10)
+
+            ! Skipping header
+            read(10,*,IOStat=IO)
+
+            do i = 1, nlines
+
+                read(10,*,IOStat=IO) iaux, xv(i), yv(i)
+
+            end do
+
+            call path%init(xv, yv)
+
+            deallocate( xv )
+            deallocate( yv )
+
+        end if
+
+
+        ! Distributing the points along the path to generate the discrete boundary
+        call distribute_points(par%kpog, par%faog, par%fbog, path, bound)
 
     end subroutine
 
@@ -267,14 +355,21 @@ contains
         type(boundary), intent(inout) :: bound
 
         integer :: i
-
         real(8) :: la
+        real(8) :: akn
+        type(class_path2d) :: path
 
         la = par%lr + par%lf
 
+        if ( par%kib == 0 ) then
+            akn = 2.d0
+        else
+            akn = 2.d0 - 2.d0 * (par%nib-0.5d0)
+        end if
+
         do i = 0, bound%sz
 
-            bound%x(i) = (dble(i)/dble(bound%sz))**par%akn * la - par%lf
+            bound%x(i) = (dble(i)/dble(bound%sz))**akn * la - par%lf
 
         end do
 
@@ -293,6 +388,13 @@ contains
 
             end do
         end if
+
+        ! Initializing a parametric path
+        call path%init(bound%x, bound%y)
+
+        ! Distributing points along the discrete boundary
+        call distribute_points(par%kpin, par%fain, par%fbin, path, bound)
+
     end subroutine
 
 
@@ -328,6 +430,42 @@ contains
             bound%y(i) = 0.d0
 
         end do
+
+    end subroutine
+
+
+    !> \brief Distribute points according to a distribution
+    subroutine distribute_points(kp, fa, fb, path, bound)
+        implicit none
+        integer,            intent(in)  :: kp ! Kind of partitioning (0=uniform, 1=monotonic cubic spline)
+        real(8),            intent(in)  :: fa ! Factor for concentration of points near the left
+        real(8),            intent(in)  :: fb ! Factor for concentration of points near the right
+        type(class_path2d), intent(in)  :: path
+        type(boundary),   intent(inout) :: bound
+
+        integer :: i
+        real(8), allocatable :: t(:)
+
+        ! Distributing the points along the path to generate the discrete boundary
+
+        allocate( t(0:bound%sz) )
+
+        ! Uniform partioning
+        if ( kp == 0 ) then
+            call get_uniform_distribution(bound%sz+1, t)
+        ! MCS partitioning
+        else
+            call get_mcs_distribution(bound%sz+1, fa, fb, t)
+        end if
+
+        do i = 0, bound%sz
+
+            bound%x(i) = path%x(t(i))
+            bound%y(i) = path%y(t(i))
+
+        end do
+
+        deallocate( t )
 
     end subroutine
 

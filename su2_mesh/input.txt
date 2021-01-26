@@ -1,22 +1,29 @@
-Power-law ogive parameters
---------------------------
-         2.d0  &    lr   &   Ogive length (m)
-        0.5d0  &    rb   &   Ogive base length (m)
-      0.659d0  &     n   &   Exponent of the power-law
+Mesh parameters
+---------------
+                  0  &    km   &   Kind of mesh ( 0 = structured, 1 = unstructured)
+                100  &    nx   &   Number of partitions along the axial direction
+                 25  &    ny   &   Number of partitions along the radial direction
+
+Ogive parameters
+----------------
+                  0  &     ko  &   King of ogive (0=power-law, 1=load from file) 
+               2.d0  &     lr  &   Ogive length (m) (for the case of ko=0)
+              0.5d0  &     rb  &   Ogive base radius (m) (for the case of ko=0)
+             0.65d0  &      n  &   Exponent of the power-law (for the case of ko=0)
+   surface_flow.csv  & ogfile  &   Coordinates of the ogive (for the case of ko=1)
+                  1  &   kpog  &   Kind of partitioning along the ogive (0=uniform, 1=monotonic cubic spline)    
+             0.10d0  &   faog  &   Factor for concentration of points near the tip of the ogive (1.0=uniform)
+             0.10d0  &   fbog  &   Factor for concentration of points near the end of the ogive (1.0=uniform)
 
 
 Inlet boundary parameters
 -------------------------
-            1  &   kib   &   Kind of inlet boundary (0=ellipse, 1=power-law)
-        1.5d0  &    lb   &   Height of the outlet (m)
-        0.1d0  &    lf   &   Distance between the ogive tip and the front part of inlet domain (m)
-        0.5d0  &   nib   &   Exponent of the power-law inlet boundary
+                  1  &   kib   &   Kind of inlet boundary (0=ellipse, 1=power-law)
+              1.5d0  &    lb   &   Height of the outlet (m)
+              0.1d0  &    lf   &   Distance between the ogive tip and the front part of inlet domain (m)
+              0.5d0  &   nib   &   Exponent of the power-law inlet boundary
+                  1  &   kpin  &   Kind of partitioning along the inlet (0=uniform, 1=monotonic cubic spline)    
+             0.50d0  &   fain  &   Factor for concentration of points near the tip of the inlet (1.0=uniform)
+             0.25d0  &   fbin  &   Factor for concentration of points near the end of the inlet (1.0=uniform)
 
-Mesh parameters
----------------
-            0  &    km   &   Kind of mesh ( 0 = structured, 1 = unstructured)
-          200  &    nx   &   Number of partitions along the axial direction
-           50  &    ny   &   Number of partitions along the radial direction
-        2.0d0  &   akn   &   Parameter to control the distribution of points along the inlet boundary
-        1.7d0  &   aks   &   Parameter to control the distribution of points along the ogive boundary
 

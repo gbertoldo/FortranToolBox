@@ -35,9 +35,24 @@
 			<Option weight="0" />
 		</Unit>
 		<Unit filename="main.f90">
-			<Option weight="1" />
+			<Option weight="2" />
 		</Unit>
 		<Unit filename="mod_boundary.f90">
+			<Option weight="0" />
+		</Unit>
+		<Unit filename="mod_class_mcs.f90">
+			<Option weight="0" />
+		</Unit>
+		<Unit filename="mod_class_path2d.f90">
+			<Option weight="1" />
+		</Unit>
+		<Unit filename="mod_hermite_functions.f90">
+			<Option weight="0" />
+		</Unit>
+		<Unit filename="mod_points_distribution.f90">
+			<Option weight="1" />
+		</Unit>
+		<Unit filename="mod_vector_search.f90">
 			<Option weight="0" />
 		</Unit>
 		<Extensions />
