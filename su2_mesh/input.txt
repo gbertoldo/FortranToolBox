@@ -27,3 +27,15 @@ Inlet boundary parameters
              0.25d0  &   fbin  &   Factor for concentration of points near the end of the inlet (1.0=uniform)
 
 
+Symmetry boundary parameters
+----------------------------
+                  0  &   kpsym  &   Kind of partitioning along the symmetry (0=uniform, 1=monotonic cubic spline)    
+             0.50d0  &   fasym  &   Factor for concentration of points near the tip of the symmetry (1.0=uniform)
+             0.25d0  &   fbsym  &   Factor for concentration of points near the end of the symmetry (1.0=uniform)
+
+
+Outlet boundary parameters
+--------------------------
+                  1  &   kpout  &   Kind of partitioning along the outlet (0=uniform, 1=monotonic cubic spline)    
+             0.10d0  &   faout  &   Factor for concentration of points near the tip of the outlet (1.0=uniform)
+             1.25d0  &   fbout  &   Factor for concentration of points near the end of the outlet (1.0=uniform)

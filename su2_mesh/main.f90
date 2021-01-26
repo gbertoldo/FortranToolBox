@@ -6,7 +6,7 @@ program main
     use mod_points_distribution
     implicit none
 
-    character(len=100) :: version = "su2_mesh - 1.0.0. Last update 26/01/2021. Guilherme Bertoldo."
+    character(len=100) :: version = "su2_mesh - 1.1.0. Last update 26/01/2021. Guilherme Bertoldo."
 
     ! Parameters to generate the mesh
     type params
@@ -28,6 +28,12 @@ program main
         integer :: kpin
         real(8) :: fain
         real(8) :: fbin
+        integer :: kpsym
+        real(8) :: fasym
+        real(8) :: fbsym
+        integer :: kpout
+        real(8) :: faout
+        real(8) :: fbout
     end type
 
     type(params) :: par
@@ -70,6 +76,12 @@ contains
         call ifile%get_value(par%kpin, "kpin")
         call ifile%get_value(par%fain, "fain")
         call ifile%get_value(par%fbin, "fbin")
+        call ifile%get_value(par%kpsym, "kpsym")
+        call ifile%get_value(par%fasym, "fasym")
+        call ifile%get_value(par%fbsym, "fbsym")
+        call ifile%get_value(par%kpout, "kpout")
+        call ifile%get_value(par%faout, "faout")
+        call ifile%get_value(par%fbout, "fbout")
 
     end subroutine
 
@@ -404,6 +416,7 @@ contains
         type(boundary), intent(inout) :: bound
 
         integer :: i
+        type(class_path2d) :: path
 
         do i = 0, bound%sz
 
@@ -412,6 +425,13 @@ contains
             bound%y(i) = (dble(i)/dble(bound%sz))*(par%lb-par%rb)+par%rb
 
         end do
+
+
+        ! Initializing a parametric path
+        call path%init(bound%x, bound%y)
+
+        ! Distributing points along the discrete boundary
+        call distribute_points(par%kpout, par%faout, par%fbout, path, bound)
 
     end subroutine
 
@@ -422,6 +442,7 @@ contains
         type(boundary), intent(inout) :: bound
 
         integer :: i
+        type(class_path2d) :: path
 
         do i = 0, bound%sz
 
@@ -430,6 +451,12 @@ contains
             bound%y(i) = 0.d0
 
         end do
+
+        ! Initializing a parametric path
+        call path%init(bound%x, bound%y)
+
+        ! Distributing points along the discrete boundary
+        call distribute_points(par%kpsym, par%fasym, par%fbsym, path, bound)
 
     end subroutine
 
