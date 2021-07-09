@@ -94,7 +94,7 @@ contains
       this%yv = y
 
       ! Calculates the coefficients of the spline
-      call get_ccsplines_coeff(this%n, dydx_l, dydx_u, x, y, this%b, this%c, this%d) ! Output: last three
+      call get_ccsplines_coeff(this%n-1, dydx_l, dydx_u, x, y, this%b, this%c, this%d) ! Output: last three
 
    end subroutine
 
